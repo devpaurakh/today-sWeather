@@ -11,17 +11,22 @@ class WeatherBloc extends Bloc<WeatherEvent, WeatherState> {
   WeatherBloc() : super(WeatherInitial()) {
     on<FetchWeather>((event, emit) async {
       emit(WeatherBlocLoading());
+
       try {
-        final String apiKey = dotenv.env['API_KEY'] ?? 'No API key found';
-        Position position = await Geolocator.getCurrentPosition();
+        // Fetch API key from the environment file
+        final String? apiKey = dotenv.env['API_KEY'];
+        if (apiKey == null || apiKey.isEmpty) {
+          throw Exception('API key not found');
+        }
         WeatherFactory weatherFactory =
             WeatherFactory(apiKey, language: Language.ENGLISH);
         Weather weather = await weatherFactory.currentWeatherByLocation(
-            position.latitude, position.longitude);
+            event.position.latitude, event.position.longitude);
 
         emit(WeatherSuccess(weather: weather));
       } catch (e) {
-        emit(WeatherBlocFailer());
+        // Log the error and emit the failure state with meaningful information
+        emit(WeatherFailur(error: e.toString()));
       }
     });
   }

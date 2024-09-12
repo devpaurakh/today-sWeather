@@ -2,19 +2,14 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
+import 'package:todayweather/bloc/weather_bloc.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
-
-
-  
-
   @override
   Widget build(BuildContext context) {
-
-     final String apiKey = dotenv.env['API_KEY'] ?? 'No API key found';
-    
     return Scaffold(
       extendBodyBehindAppBar: true,
       backgroundColor: Colors.black,
@@ -69,234 +64,282 @@ class HomePage extends StatelessWidget {
                   ),
                 ),
               ),
-              SizedBox(
-                height: MediaQuery.of(context).size.height,
-                width: MediaQuery.of(context).size.width,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Row(
+              BlocBuilder<WeatherBloc, WeatherState>(builder: (context, state) {
+                if (state is WeatherSuccess) {
+                  return SizedBox(
+                    height: MediaQuery.of(context).size.height,
+                    width: MediaQuery.of(context).size.width,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(
-                          Icons.location_pin,
-                          size: 20,
-                          color: Colors.white,
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.location_pin,
+                              size: 20,
+                              color: Colors.white,
+                            ),
+                            Text(
+                              "${state.weather.areaName}",
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white),
+                            ),
+                          ],
                         ),
-                        Text(
-                          "Kathmandu, Nepal",
+                        const SizedBox(
+                          height: 5,
+                        ),
+                        const Text(
+                          "Good Morning",
                           style: TextStyle(
-                              fontWeight: FontWeight.bold, color: Colors.white),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(
-                      height: 5,
-                    ),
-                    const Text(
-                      "Good Moring",
-                      style: TextStyle(
-                        fontSize: 25,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(
-                      height: 20,
-                    ),
-                    Center(
-                      child: Image.asset(
-                          height: 200, width: 200, "assets/daysun.png"),
-                    ),
-                    const SizedBox(
-                      height: 5,
-                    ),
-                    const Center(
-                      child: Text(
-                        "21°C",
-                        style: TextStyle(
-                            fontSize: 55,
+                            fontSize: 25,
                             fontWeight: FontWeight.bold,
-                            color: Colors.white),
-                      ),
-                    ),
-                    const Center(
-                      child: Column(
-                        children: [
-                          Text(
-                            "THUNDERSTROME",
-                            style: TextStyle(
-                                fontSize: 25,
-                                color: Colors.white,
-                                fontWeight: FontWeight.w500),
+                            color: Colors.white,
                           ),
-                          Text(
-                            "Friday 17 . 9:45 AM",
-                            style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.white,
-                                fontWeight: FontWeight.w300),
+                        ),
+                        const SizedBox(
+                          height: 20,
+                        ),
+                        Center(
+                          child: Image.asset(
+                              height: 200,
+                              width: 200,
+                              getWeatherImagePath(
+                                  state.weather.weatherConditionCode ?? 0)),
+                        ),
+                        const SizedBox(
+                          height: 5,
+                        ),
+                        Center(
+                          child: Text(
+                            "${state.weather.temperature!.celsius!.round()}°C",
+                            style: const TextStyle(
+                                fontSize: 55,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white),
                           ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(
-                      height: 20,
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          children: [
-                            Image.asset(
-                              height: 40,
-                              width: 40,
-                              "assets/daysun.png",
-                            ),
-                            const SizedBox(
-                              width: 10,
-                            ),
-                            const Column(
-                              children: [
-                                Text(
-                                  "Sunrise",
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w300,
+                        ),
+                        Center(
+                          child: Column(
+                            children: [
+                              Text(
+                                state.weather.weatherMain!.toUpperCase(),
+                                style: const TextStyle(
+                                    fontSize: 25,
                                     color: Colors.white,
-                                  ),
-                                ),
-                                Text(
-                                  "3:34 AM",
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w700,
+                                    fontWeight: FontWeight.w500),
+                              ),
+                              Text(
+                                DateFormat('EEEE dd .')
+                                    .add_jm()
+                                    .format(state.weather.date!),
+                                // "Friday 17 . 9:45 AM",
+                                style: const TextStyle(
+                                    fontSize: 16,
                                     color: Colors.white,
-                                  ),
-                                ),
-                              ],
-                            )
-                          ],
+                                    fontWeight: FontWeight.w300),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(
+                          height: 20,
                         ),
                         Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Image.asset(
-                              height: 40,
-                              width: 40,
-                              "assets/nightmoon.png",
-                            ),
-                            const SizedBox(
-                              width: 3,
-                            ),
-                            const Column(
+                            Row(
                               children: [
-                                Text(
-                                  "Sunset",
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w300,
-                                    color: Colors.white,
-                                  ),
+                                Image.asset(
+                                  height: 40,
+                                  width: 40,
+                                  "assets/daysun.png",
                                 ),
-                                Text(
-                                  "3:34 PM",
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w700,
-                                    color: Colors.white,
-                                  ),
+                                const SizedBox(
+                                  width: 10,
                                 ),
+                                Column(
+                                  children: [
+                                    const Text(
+                                      "Sunrise",
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w300,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    Text(
+                                      DateFormat()
+                                          .add_jm()
+                                          .format(state.weather.sunrise!),
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w700,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ],
+                                )
                               ],
-                            )
+                            ),
+                            Row(
+                              children: [
+                                Image.asset(
+                                  height: 40,
+                                  width: 40,
+                                  "assets/nightmoon.png",
+                                ),
+                                const SizedBox(
+                                  width: 3,
+                                ),
+                                Column(
+                                  children: [
+                                    const Text(
+                                      "Sunset",
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w300,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    Text(
+                                      DateFormat()
+                                          .add_jm()
+                                          .format(state.weather.sunset!),
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w700,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ],
+                                )
+                              ],
+                            ),
                           ],
                         ),
+                        const SizedBox(
+                          height: 5,
+                        ),
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 5.0),
+                          child: Divider(
+                            color: Color.fromARGB(255, 63, 63, 63),
+                          ),
+                        ),
+                        const SizedBox(
+                          height: 5,
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              children: [
+                                Image.asset(
+                                  height: 40,
+                                  width: 40,
+                                  "assets/thermomater.png",
+                                ),
+                                const SizedBox(
+                                  width: 10,
+                                ),
+                                Column(
+                                  children: [
+                                    const Text(
+                                      "Temp Max",
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w300,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    Text(
+                                      "${state.weather.tempMax!.celsius!.round()}°C",
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w700,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ],
+                                )
+                              ],
+                            ),
+                            Row(
+                              children: [
+                                Image.asset(
+                                  height: 40,
+                                  width: 40,
+                                  "assets/thermomatermin.png",
+                                ),
+                                const SizedBox(
+                                  width: 3,
+                                ),
+                                Column(
+                                  children: [
+                                    const Text(
+                                      "Temp Min",
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w300,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    Text(
+                                      "${state.weather.tempMin!.celsius!.round()}°C",
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w700,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ],
+                                )
+                              ],
+                            ),
+                          ],
+                        )
                       ],
                     ),
-                    const SizedBox(
-                      height: 5,
-                    ),
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 5.0),
-                      child: Divider(
-                        color: Color.fromARGB(255, 63, 63, 63),
-                      ),
-                    ),
-                    const SizedBox(
-                      height: 5,
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          children: [
-                            Image.asset(
-                              height: 40,
-                              width: 40,
-                              "assets/thermomater.png",
-                            ),
-                            const SizedBox(
-                              width: 10,
-                            ),
-                            const Column(
-                              children: [
-                                Text(
-                                  "Temp Max",
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w300,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                Text(
-                                  "40°C",
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w700,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ],
-                            )
-                          ],
-                        ),
-                        Row(
-                          children: [
-                            Image.asset(
-                              height: 40,
-                              width: 40,
-                              "assets/thermomatermin.png",
-                            ),
-                            const SizedBox(
-                              width: 3,
-                            ),
-                            const Column(
-                              children: [
-                                Text(
-                                  "Temp Min",
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w300,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                Text(
-                                  "20°C",
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w700,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ],
-                            )
-                          ],
-                        ),
-                      ],
-                    )
-                  ],
-                ),
-              )
+                  );
+                } else if (state is WeatherBlocLoading) {
+                  return const Center(
+                    child: CircularProgressIndicator(),
+                  );
+                } else {
+                  return const SizedBox();
+                }
+              }),
             ],
           ),
         ),
       ),
     );
+  }
+
+  // Function to get the weather image path based on condition code
+  String getWeatherImagePath(int conditionCode) {
+    String imagePath;
+
+    // Mapping condition codes to image paths
+    if (conditionCode >= 200 && conditionCode < 300) {
+      imagePath = 'assets/nightstorm.png';
+    } else if (conditionCode >= 300 && conditionCode < 400) {
+      imagePath = 'assets/daywind.png';
+    } else if (conditionCode >= 500 && conditionCode < 600) {
+      imagePath = 'assets/dayrain.png';
+    } else if (conditionCode >= 600 && conditionCode < 700) {
+      imagePath = 'assets/daysnow.png';
+    } else if (conditionCode == 701) {
+      imagePath = 'assets/nightwind.png';
+    } else if (conditionCode == 800) {
+      imagePath = 'assets/daysun.png';
+    } else if (conditionCode >= 801) {
+      imagePath = 'assets/nightclouds.png';
+    } else {
+      // Default image if condition code doesn't match
+      imagePath = 'assets/daysun.png';
+    }
+
+    return imagePath;
   }
 }
