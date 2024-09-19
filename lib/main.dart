@@ -58,7 +58,7 @@ class MyApp extends StatelessWidget {
 
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
-      return Future.error('Location services diabled.');
+      return Future.error('Location diabled.');
     }
 
     permission = await Geolocator.checkPermission();
